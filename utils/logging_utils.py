@@ -6,13 +6,8 @@ import logging
 from logging.handlers import RotatingFileHandler
 
 
-__scrapers_logger_name = 'scrapers'
 _logging_configured = False
 _Level = Union[int, str]
-
-
-def get_scraper_logger() -> logging.Logger:
-    return logging.getLogger(__scrapers_logger_name)
 
 
 def setup_logging(logging_level: _Level = logging.DEBUG):
@@ -45,20 +40,6 @@ def setup_logging(logging_level: _Level = logging.DEBUG):
     root_logger.setLevel(logging_level)
     root_logger.addHandler(console_handler)
     root_logger.addHandler(root_file_handler)
-    
-    # scrapers (separate scraps logs file) ligging
-    scrapers_file_handler = RotatingFileHandler(
-        logs_dir / 'scrapers.log',
-        maxBytes=10*1024*1024,  # 10MB
-        backupCount=10,
-        encoding='utf-8'
-    )
-    scrapers_file_handler.setFormatter(formatter)
-
-    scrapers_logger = logging.getLogger(__scrapers_logger_name)
-    scrapers_logger.setLevel(logging_level)
-    scrapers_logger.addHandler(scrapers_file_handler)
-    scrapers_logger.propagate = False
     
     # logging for library (a little less noise)
     logging.getLogger('playwright').setLevel(logging.WARNING)

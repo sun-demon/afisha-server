@@ -1,16 +1,16 @@
-from typing import Optional
-
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from fastapi import Query
 
 from database import SessionLocal
 from models import Favorite, Event
+from utils.security import get_current_user
 
 
 router = APIRouter(prefix="/api/favorites", tags=["favorites"])
 
 
+# Dependency
 def get_db():
     db = SessionLocal()
     try:
@@ -19,51 +19,56 @@ def get_db():
         db.close()
 
 
+# Get favorites (paginated)
 @router.get("/")
 def get_favorites(
-    user_id: int,
-    page: int = Query(1, ge=1),
-    per_page: int = Query(12, ge=1, le=100),
+    start: int = Query(1, ge=1),
+    pages: int = Query(1, ge=1),
+    current_user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     Get user favorite events with pagenaation.
     """
-    query = db.query(Favorite).filter(Favorite.user_id == user_id)
+    page_size = 12
+    query = db.query(Favorite).filter(Favorite.user_id == current_user.id)
     total = query.count()
-    favorites = query.offset((page - 1) * per_page).limit(per_page).all()
+    favorites = query.offset((start - 1) * page_size).limit(pages * page_size).all()
 
-    # Подгружаем сами мероприятия
+    # load events
     events = [db.query(Event).get(f.event_id) for f in favorites]
 
     return {
-        "page": page,
-        "per_page": per_page,
+        "start": start,
+        "pages": pages,
+        "page_size": page_size,
         "total": total,
         "events": events
     }
 
 
+# Add favorite
 @router.post("/{event_id}")
-def add_favorite(event_id: str, user_id: int, db: Session = Depends(get_db)):
+def add_favorite(event_id: str, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
     """
     Add event to favorites
     """
-    if db.query(Favorite).filter_by(user_id=user_id, event_id=event_id).first():
+    if db.query(Favorite).filter_by(user_id=current_user.id, event_id=event_id).first():
         raise HTTPException(status_code=400, detail="Already in favorites")
 
-    fav = Favorite(user_id=user_id, event_id=event_id)
+    fav = Favorite(user_id=current_user.id, event_id=event_id)
     db.add(fav)
     db.commit()
     return {"message": "Added to favorites"}
 
 
+# Remove favorite
 @router.delete("/{event_id}")
-def remove_favorite(event_id: str, user_id: int, db: Session = Depends(get_db)):
+def remove_favorite(event_id: str, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
     """
     Delete event from favorites
     """
-    fav = db.query(Favorite).filter_by(user_id=user_id, event_id=event_id).first()
+    fav = db.query(Favorite).filter_by(user_id=current_user.id, event_id=event_id).first()
     if not fav:
         raise HTTPException(status_code=404, detail="Not found")
 
