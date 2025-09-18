@@ -19,7 +19,7 @@ def get_db():
         db.close()
 
 
-# Get favorites (paginated)
+# Get favorites
 @router.get("/")
 def get_favorites(
     offset: int = Query(0, ge=0),
@@ -27,9 +27,7 @@ def get_favorites(
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Get user favorite events with pagenaation.
-    """
+    """Get user favorite events"""
     query = db.query(Favorite).filter(Favorite.user_id == current_user.id)
     total = query.count()
     favorites = query.offset(offset).limit(limit).all()
@@ -48,9 +46,7 @@ def get_favorites(
 # Add favorite
 @router.post("/{event_id}")
 def add_favorite(event_id: str, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
-    """
-    Add event to favorites
-    """
+    """Add event to favorites"""
     if db.query(Favorite).filter_by(user_id=current_user.id, event_id=event_id).first():
         raise HTTPException(status_code=400, detail="Already in favorites")
 
@@ -63,9 +59,7 @@ def add_favorite(event_id: str, current_user = Depends(get_current_user), db: Se
 # Remove favorite
 @router.delete("/{event_id}")
 def remove_favorite(event_id: str, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
-    """
-    Delete event from favorites
-    """
+    """Delete event from favorites"""
     fav = db.query(Favorite).filter_by(user_id=current_user.id, event_id=event_id).first()
     if not fav:
         raise HTTPException(status_code=404, detail="Not found")

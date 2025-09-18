@@ -12,6 +12,7 @@ from utils.security import get_optional_user
 router = APIRouter(prefix="/api/events", tags=["events"])
 
 
+# Dependency
 def get_db():
     db = SessionLocal()
     try:

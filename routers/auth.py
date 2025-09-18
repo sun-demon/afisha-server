@@ -13,6 +13,7 @@ from config import settings
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
+# Dependency
 def get_db():
     db = SessionLocal()
     try:
@@ -21,6 +22,7 @@ def get_db():
         db.close()
 
 
+# Register user
 @router.post("/register")
 def register(
     username: str,

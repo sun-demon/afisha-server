@@ -18,6 +18,7 @@ def get_db():
         db.close()
 
 
+# Get events
 @router.get("/")
 def get_tickets(
     offset: int = Query(0, ge=0),
@@ -25,9 +26,7 @@ def get_tickets(
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Get buying user tickets with pagenation
-    """
+    """Get buying user tickets"""
     query = db.query(Ticket).filter(Ticket.user_id == current_user.id)
     total = query.count()
     tickets = query.offset(offset).limit(limit).all()
@@ -43,11 +42,10 @@ def get_tickets(
     }
 
 
+# Buy ticket
 @router.post("/{event_id}")
 def buy_ticket(event_id: str, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
-    """
-    Buy ticket (if was in favorites — remove from favorites)
-    """
+    """Buy ticket (if was in favorites — remove from favorites)"""
     if db.query(Ticket).filter_by(user_id=current_user.id, event_id=event_id).first():
         raise HTTPException(status_code=400, detail="Already purchased")
 
