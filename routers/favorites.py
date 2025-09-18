@@ -22,26 +22,24 @@ def get_db():
 # Get favorites (paginated)
 @router.get("/")
 def get_favorites(
-    start: int = Query(1, ge=1),
-    pages: int = Query(1, ge=1),
+    offset: int = Query(0, ge=0),
+    limit: int = Query(12, ge=1, le=50),
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     Get user favorite events with pagenaation.
     """
-    page_size = 12
     query = db.query(Favorite).filter(Favorite.user_id == current_user.id)
     total = query.count()
-    favorites = query.offset((start - 1) * page_size).limit(pages * page_size).all()
+    favorites = query.offset(offset).limit(limit).all()
 
     # load events
     events = [db.query(Event).get(f.event_id) for f in favorites]
 
     return {
-        "start": start,
-        "pages": pages,
-        "page_size": page_size,
+        "offset": offset,
+        "limit": limit,
         "total": total,
         "events": events
     }

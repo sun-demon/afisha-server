@@ -23,15 +23,11 @@ def get_db():
 @router.get("/")
 def get_events(
     rubric: Optional[str] = None,
-    start: int = Query(1, ge=1),
-    pages: int = Query(1, ge=1, le=10),
+    offset: int = Query(0, ge=0),
+    limit: int = Query(12, ge=1, le=50),
     authorization: Optional[str] = Header(None),
     db: Session = Depends(get_db)
 ):
-    page_size = 12
-    offset = (start - 1) * page_size
-    limit = pages * page_size
-
     # init user_id, if token sended
     user_id = None
     if authorization:
@@ -67,9 +63,8 @@ def get_events(
         })
 
     return {
-        "start": start,
-        "pages": pages,
-        "page_size": page_size,
+        "offset": offset,
+        "limit": limit,
         "total": total,
         "events": results
     }
