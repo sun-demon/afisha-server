@@ -1,12 +1,13 @@
 import os, glob, json
 from datetime import datetime
+from typing import Optional
 
 from sqlalchemy.orm import Session
 
 from models import Event, EventRubric, Rubric
 
 
-def get_latest_data_file(data_dir: str) -> str | None:
+def get_latest_data_file(data_dir: str) -> Optional[str]:
     files = glob.glob(os.path.join(data_dir, "moscow_events*.json"))
     return max(files) if files else None
 

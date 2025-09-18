@@ -1,4 +1,5 @@
 import os, shutil
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
@@ -21,7 +22,7 @@ def get_db():
 
 
 @router.post("/register")
-def register(username: str, password: str, email: str | None = None, avatar: UploadFile | None = File(None), db: Session = Depends(get_db)):
+def register(username: str, password: str, email: Optional[str] = None, avatar: Optional[UploadFile] = File(None), db: Session = Depends(get_db)):
     if db.query(User).filter(User.username == username).first():
         raise HTTPException(status_code=400, detail="Username already exists")
 
