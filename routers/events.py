@@ -59,6 +59,9 @@ def get_events(
             "id": e.id,
             "title": e.title,
             "image_url": e.image_url,
+            "details": e.details,
+            "price": e.price,
+            "rating": e.rating,
             "is_favorite": e.id in favs if user_id else False,
             "is_ticket": e.id in tickets if user_id else False
         })
