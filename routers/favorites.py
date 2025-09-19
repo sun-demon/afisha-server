@@ -1,3 +1,5 @@
+from typing import Optional, List 
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from fastapi import Query
@@ -24,16 +26,17 @@ def get_db():
 def get_favorites(
     offset: int = Query(0, ge=0),
     limit: int = Query(12, ge=1, le=50),
+    ids: Optional[List[str]] = Query(None),
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Get user favorite events"""
-    query = db.query(Favorite).filter(Favorite.user_id == current_user.id)
+    query = db.query(Event).filter(Event.id.in_(ids)) if ids else db.query(Favorite).filter(Favorite.user_id == current_user.id)    
     total = query.count()
     favorites = query.offset(offset).limit(limit).all()
 
     # load events
-    events = [db.query(Event).get(f.event_id) for f in favorites]
+    events = [db.query(Event).get(f.event_id) for f in favorites] if ids else favorites
 
     return {
         "offset": offset,
