@@ -3,7 +3,7 @@ from typing import Optional
 
 from jose import jwt, JWTError
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordBearer, HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 
@@ -16,6 +16,8 @@ from config import settings
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Bearer authorization
+security = HTTPBearer(auto_error=False)
 
 
 # Database dependency
@@ -65,24 +67,26 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 
 
 # Get optional user (not required)
-def get_optional_user(token: Optional[str] = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> Optional[User]:
+def get_optional_user(
+    creds: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    db: Session = Depends(get_db),
+) -> Optional[User]:
     """
-    Get user from JWT token, if exists.
-    If token doesn't exist or it's incorrect - return None.
+    Get user from JWT token, or None.
     """
-    if not token:
+    if not creds:
         return None
+    token = creds.credentials
     try:
         payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
-        user_id: int = int(payload.get("sub"))
-        if user_id is None:
+        user_id = payload.get("sub")
+        if not user_id:
             return None
+        return db.query(User).get(int(user_id))
     except JWTError:
         return None
-
-    return db.query(User).get(user_id)
-
-
+    
+    
 # Password utils
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
