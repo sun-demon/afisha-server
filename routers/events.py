@@ -71,12 +71,3 @@ def get_events(
         "total": total,
         "events": dict_event_list
     }
-
-
-def add_personal_info_to_events(
-    events: List[Event],
-    user: User,
-    db: Session = Depends(get_db)
-):
-    personaled_events = events
-    
