@@ -26,13 +26,14 @@ def get_events(
     rubric: Optional[str] = None,
     offset: int = Query(0, ge=0),
     limit: int = Query(12, ge=1, le=50),
-    ids: Optional[List[str]] = None,
+    id: Optional[str] = None,
     user: Optional[User] = Depends(get_optional_user),
     db: Session = Depends(get_db)
 ):  
     query = db.query(Event).filter(Event.archived == False)
 
-    if ids:
+    if id:
+        ids = id.split(",")
         query = query.filter(Event.id.in_(ids))
 
     if rubric:
