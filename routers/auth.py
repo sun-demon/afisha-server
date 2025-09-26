@@ -1,7 +1,7 @@
 import os, shutil
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status
 from sqlalchemy.orm import Session
 
 from database import SessionLocal
@@ -31,14 +31,20 @@ def register(
     db: Session = Depends(get_db)
 ):
     if db.query(User).filter(User.username == username).first():
-        raise HTTPException(status_code=400, detail="Username already exists")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, 
+            detail="Username already exists"
+        )
     if email and db.query(User).filter(User.email == email).first():
-        raise HTTPException(status_code=400, detail="Email already exists")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, 
+            detail="Email already exists"
+        )
 
     avatar_url = None
     if avatar and avatar.filename:
         os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
-        ext = os.path.splitext(avatar.filename)[1].lower()
+        ext = os.path.splitext(avatar.filename)[1].lower() # type: ignore
         safe_filename = f"{username}{ext}" if ext else username
         avatar_path = os.path.join(settings.UPLOAD_DIR, safe_filename)
         with open(avatar_path, "wb") as f:
