@@ -1,6 +1,6 @@
 from typing import Optional, List
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 
 
 class Token(BaseModel):
@@ -8,40 +8,45 @@ class Token(BaseModel):
     token_type: str = "bearer"
 
 
+class UserBase(BaseModel):
+    id: int
+    username: str
+    email: Optional[EmailStr] = None
+    avatar_url: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class UserCreate(BaseModel):
     username: str
     password: str
     email: Optional[EmailStr] = None
-    # optional client-side favorites for merging on register/login:
-    client_favorites: Optional[List[str]] = None
 
 
-class UserOut(BaseModel):
-    id: int
-    username: str
-    email: Optional[EmailStr]
-    avatar_url: Optional[str]
+class UserOut(UserBase):
+    pass
 
-    class Config:
-        orm_mode = True
+
+class AuthResponse(Token):
+    user: UserOut
 
 
 class EventOut(BaseModel):
     id: str
     title: str
-    image_url: Optional[str]
-    rating: Optional[float]
-    price: Optional[str]
-    details: Optional[str]
+    image_url: Optional[str] = None
+    rating: Optional[float] = None
+    price: Optional[str] = None
+    details: Optional[str] = None
     archived: bool
     is_favorite: Optional[bool] = False
+    is_ticket: Optional[bool] = False
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
-class Paginated(BaseModel):
+class PaginatedEvents(BaseModel):
     total: int
-    page: int
-    per_page: int
-    items: list
+    offset: int
+    limit: int
+    events: List[EventOut]

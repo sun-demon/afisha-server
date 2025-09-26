@@ -22,7 +22,7 @@ class Event(Base):
 
     rubrics = relationship("EventRubric", back_populates="event")
 
-    archived: Mapped[Optional[str]] = mapped_column(Boolean, nullable=False, default=False)
+    archived: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
 
 # -----------------------------
