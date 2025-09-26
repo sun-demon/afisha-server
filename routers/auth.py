@@ -8,7 +8,7 @@ from database import SessionLocal
 from models import User
 from utils.security import hash_password, verify_password, create_access_token
 from config import settings
-from schemas import AuthResponse, UserOut
+from schemas import AuthResponse, UserCreate, UserOut
 
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
@@ -30,6 +30,11 @@ def register(
     avatar: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db)
 ):
+    try:
+        user_in = UserCreate(username=username, email=email, password=password) # type: ignore
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    
     if db.query(User).filter(User.username == username).first():
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, 
@@ -68,11 +73,16 @@ def register(
 
 @router.post("/login", response_model=AuthResponse)
 def login(
-    username: str = Form(...),
+    login: str = Form(...),  # one field username/email
     password: str = Form(...),
     db: Session = Depends(get_db)
 ):
-    user = db.query(User).filter(User.username == username).first()
+    # check, if it email (by '@')
+    if "@" in login:
+        user = db.query(User).filter(User.email == login).first()
+    else:
+        user = db.query(User).filter(User.username == login).first()
+
     if not user or not verify_password(password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 

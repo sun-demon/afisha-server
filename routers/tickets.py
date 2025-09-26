@@ -1,8 +1,10 @@
+from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from database import SessionLocal
-from models import Ticket, Favorite, Event, User
+from models import Ticket, Favorite, Event, User, Rubric, EventRubric
 from utils.security import get_current_user
 from schemas import PaginatedEvents, EventOut
 
@@ -20,16 +22,21 @@ def get_db():
 
 @router.get("/", response_model=PaginatedEvents)
 def get_tickets(
+    rubric: Optional[str] = None,
     offset: int = Query(0, ge=0),
     limit: int = Query(12, ge=1, le=50),
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    query = db.query(Ticket).filter(Ticket.user_id == user.id)
-    total = query.count()
-    tickets = query.offset(offset).limit(limit).all()
+    query = db.query(Event).filter(Event.archived == False)
 
-    events = [db.query(Event).get(t.event_id) for t in tickets]
+    if rubric:
+        query = query.join(EventRubric).join(Rubric).filter(Rubric.code == rubric)
+   
+    query = query.join(Ticket, Ticket.event_id == Event.id).filter(Ticket.user_id == user.id)
+
+    total = query.count()
+    events = query.offset(offset).limit(limit).all()
 
     event_list = [
         EventOut(
@@ -42,14 +49,18 @@ def get_tickets(
             archived=e.archived,
             is_ticket=True,
         )
-        for e in events if e
+        for e in events
     ]
 
-    return PaginatedEvents(offset=offset, limit=limit, total=total, events=event_list)
+    return PaginatedEvents(rubric=(rubric or "all"), offset=offset, limit=limit, total=total, events=event_list)
 
 
 @router.post("/{event_id}")
-def buy_ticket(event_id: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def buy_ticket(
+    event_id: str, 
+    user: User = Depends(get_current_user), 
+    db: Session = Depends(get_db)
+):
     if db.query(Ticket).filter_by(user_id=user.id, event_id=event_id).first():
         raise HTTPException(status_code=400, detail="Already purchased")
 

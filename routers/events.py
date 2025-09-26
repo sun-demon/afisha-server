@@ -65,4 +65,4 @@ def get_events(
         for e in events
     ]
 
-    return PaginatedEvents(offset=offset, limit=limit, total=total, events=event_list)
+    return PaginatedEvents(rubric=(rubric or "all"), offset=offset, limit=limit, total=total, events=event_list)
