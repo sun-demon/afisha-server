@@ -41,10 +41,10 @@ def register(
             detail="Email already exists"
         )
 
-    # try:
-    #     UserCreate(username=username, email=email, password=password) # type: ignore
-    # except Exception as e:
-    #     raise HTTPException(status_code=422, detail=str(e))
+    try:
+        UserCreate(username=username, email=email, password=password) # type: ignore
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=str(e))
 
     avatar_url = None
     if avatar and avatar.filename:

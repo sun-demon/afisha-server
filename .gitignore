@@ -17,6 +17,7 @@ db/
 # Data source
 data/
 *.json
+uploads/
 
 # Logs
 logs/
