@@ -54,7 +54,7 @@ def register(
         avatar_path = os.path.join(settings.UPLOAD_DIR, safe_filename)
         with open(avatar_path, "wb") as f:
             shutil.copyfileobj(avatar.file, f)
-        avatar_url = f"/{settings.UPLOAD_DIR.rstrip('/')}/{safe_filename}"
+        avatar_url = safe_filename
 
     user = User(
         username=username,

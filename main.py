@@ -9,7 +9,7 @@ from database import init_db, SessionLocal
 from utils.logging_utils import setup_logging
 from services.events_loader import get_latest_data_file, load_events_from_json
 
-from routers import auth, events, favorites, tickets
+from routers import auth, events, favorites, tickets, avatars
 
 
 setup_logging()
@@ -51,3 +51,4 @@ app.include_router(auth.router)
 app.include_router(events.router)
 app.include_router(favorites.router)
 app.include_router(tickets.router)
+app.include_router(avatars.router)
