@@ -30,11 +30,6 @@ def register(
     avatar: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db)
 ):
-    try:
-        user_in = UserCreate(username=username, email=email, password=password) # type: ignore
-    except Exception as e:
-        raise HTTPException(status_code=422, detail=str(e))
-    
     if db.query(User).filter(User.username == username).first():
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, 
@@ -45,6 +40,11 @@ def register(
             status_code=status.HTTP_409_CONFLICT, 
             detail="Email already exists"
         )
+
+    # try:
+    #     UserCreate(username=username, email=email, password=password) # type: ignore
+    # except Exception as e:
+    #     raise HTTPException(status_code=422, detail=str(e))
 
     avatar_url = None
     if avatar and avatar.filename:
